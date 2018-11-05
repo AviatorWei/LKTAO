@@ -76,14 +76,14 @@ asmlinkage int (*original_call) (int, const char *, int, umode_t);
  * check the address space, which is not feasible at this time.
  */
 
-#define SYS_CALL_TABLE_ADDR 0xffffffffaae001a0 
+#define SYS_CALL_TABLE_ADDR 0xffffffff978001a0 
 #ifndef SYS_CALL_TABLE_ADDR
 unsigned long **find_sys_call_table(void)
 {
 	unsigned long ptr;
 	unsigned long *p;
-	int i = 0;
-	for(ptr = (unsigned long) linux_banner; ; ptr += sizeof(void*)){
+	int i = 0;	
+ 	for(ptr = (unsigned long) linux_banner; ; ptr += sizeof(void*)){
 		p = (unsigned long *) ptr;
 		i += 1;
 		if (p[__NR_close] == (unsigned long)sys_close){
@@ -117,18 +117,18 @@ asmlinkage int our_sys_openat(int pathnm, const char *filename, int flags, int m
 	/* 
 	 * Check if this is the user we're spying on 
 	 */
-	if (uid == current_uid().val) {
+//	if (uid == current_uid().val) {
 		/* 
 		 * Report the file, if relevant 
 		 */
-		printk("Opened file by %d: ", uid);
-		do {
-			get_user(ch, filename + i);
-			i++;
-			printk("%c", ch);
-		} while (ch != 0);
-		printk("\n");
-	}
+//		printk("Opened file by %d: ", uid);
+//		do {
+//			get_user(ch, filename + i);
+//			i++;
+//			printk("%c", ch);
+//		} while (ch != 0);
+//		printk("\n");
+//	}
 
 	/* 
 	 * Call the original sys_open - otherwise, we lose
@@ -182,7 +182,7 @@ int init_module()
 	/*
 	 * No.213 syscall is not implemented, so we use it to return the result
 	 */
-	sys_call_table[__NR_osf_mvalid] = openat_time;
+	sys_call_table[213] = openat_time;
 	printk(KERN_INFO "INSERT COUNTER\n");
 	/* 
 	 * To get the address of the function for system
@@ -213,6 +213,7 @@ void cleanup_module()
 	}
 	printk(KERN_ALERT "Exiting our module...\n");
 	sys_call_table[__NR_openat] = original_call;
-	sys_call_table[__NR_osf_mvalid] = NULL;
+	sys_call_table[213] = NULL;
+	
 	write_cr0(cr0);
 }
